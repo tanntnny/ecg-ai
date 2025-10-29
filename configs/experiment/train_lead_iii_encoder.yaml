@@ -1,0 +1,16 @@
+# @package _global_
+
+defaults:
+  - override /model: lead_encoder_base
+  - override /train: single_gpu_l
+
+model:
+  lead: "III"
+  task: "age"
+
+train:
+  metrics: ["mse", "pred_dist"]
+  epochs: 50
+  batch_size: 64
+
+notes: "Train the Lead III Encoder model for age prediction task."

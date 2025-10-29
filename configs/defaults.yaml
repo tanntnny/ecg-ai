@@ -1,0 +1,11 @@
+defaults:
+    - data: ecg
+    - model: ecg_base
+    - train: single_gpu_l
+    - pipeline: preprocess_ecg
+    - experiment: null
+    - _self_
+
+cmd: "train"
+output_dir: "outputs/${now:%Y-%m-%d_%H-%M-%S}"
+debug: true

@@ -1,0 +1,14 @@
+pipeline: preprocess_ecg
+src: dataset/cleaned/data_config.csv
+save: dataset/preprocessed/ecg
+
+target_fs: 1_00
+hp_cutoff_hz: 0.5
+lp_cutoff_hz: 40.0
+notch_hz: 50
+q_factor: 30
+
+logmel_sr: 16_000
+n_fft: 1024
+hop_length: 256
+n_mels: 128

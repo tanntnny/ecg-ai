@@ -1,0 +1,9 @@
+trainer: "hf"
+metrics: ["mse"]
+
+epochs: 20
+batch_size: 32
+eval_batch_size: 32
+
+metric_for_best_model: "eval_loss"
+greater_is_better: false

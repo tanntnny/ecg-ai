@@ -1,0 +1,4 @@
+module: "ecg"
+src: "dataset/preprocessed/ecg/data_config.csv"
+
+train_ratio: 0.8
