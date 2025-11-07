@@ -14,7 +14,7 @@ from transformers import (
 from transformers.trainer_callback import TrainerCallback
 
 from ..interfaces.protocol import TrainerProtocol, DataProtocol
-from ..core.logger import get_logger, Logger
+from ..core.logger import logger
 from ..models.builder import build_model
 from ..data.builder import build_data
 
@@ -22,7 +22,7 @@ from ..data.builder import build_data
 class HFTrainer(TrainerProtocol):
     def __init__(self, cfg):
         self.cfg = cfg
-        self.logger = get_logger(self.cfg)
+        self.logger = logger
 
         self.logger.log_info("HFTrainer", "Initializing Hugging Face Trainer.", break_section=True)
         self.logger.log_info("HFTrainer/Cfg", str(asdict(self.cfg)) if is_dataclass(self.cfg) else str(self.cfg))
