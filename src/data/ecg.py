@@ -12,7 +12,7 @@ import torchaudio
 from torch.utils.data import Dataset
 
 from ..interfaces.protocol import DataProtocol
-from ..core.logger import get_logger
+from ..core.logger import logger
 
 _LEAD_ORDER = ['I', 'II', 'III', 'aVR', 'aVL', 'aVF', 'V1', 'V2', 'V3', 'V4', 'V5', 'V6']
 _SEX_MAP = {'M': 0, 'F': 1}
@@ -67,13 +67,13 @@ class ECGDataset(Dataset):
     def __getitem__(self, idx: int) -> Dict[str, torch.Tensor]:
         return self.sample[idx]
 
-def collator(batch: List[Dict[str, Any]]) -> Dict[str, torch.Tensor]:
+def collator(batch: List[Dict[str, Any]]):
     # x: Dict[lead, tensor]
-    waveforms: Dict[str, torch.Tensor] = {lead: [] for lead in _LEAD_ORDER} # lead: [B, T, F]
-    logmels: Dict[str, torch.Tensor] = {lead: [] for lead in _LEAD_ORDER} # lead: [B, T, F]
-    age_labels: List[torch.Tensor] = [] # [B, ]
-    sex_labels: List[torch.Tensor] = [] # [B, ]
-    labels: List[torch.Tensor] = [] # [B, ]
+    waveforms: dict = {lead: [] for lead in _LEAD_ORDER} # lead: [B, T, F]
+    logmels: dict = {lead: [] for lead in _LEAD_ORDER} # lead: [B, T, F]
+    age_labels = [] # [B, ]
+    sex_labels = [] # [B, ]
+    labels = [] # [B, ]
     for sample in batch:
         logmel, waveform, age, sex, label = sample["logmel"], sample["waveform"], sample["age_label"], sample["sex_label"], sample["label"]
         for lead in _LEAD_ORDER:
@@ -99,7 +99,7 @@ def collator(batch: List[Dict[str, Any]]) -> Dict[str, torch.Tensor]:
 class ECGData(DataProtocol):
     def __init__(self, cfg):
         self.cfg = cfg
-        self.logger = get_logger(self.cfg)
+        self.logger = logger
         
         self.data_confg = pd.read_csv(self.cfg.data.src)
         self.basenames = self._get_all_basenames()
