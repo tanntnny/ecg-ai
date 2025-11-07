@@ -20,10 +20,10 @@ class LeadTrainer(TrainerProtocol):
             lead_output_dir = self.output_dir / lead
             lead_output_dir.mkdir(parents=True, exist_ok=True)
 
-            logger.log_info("LeadTrainer", f"Starting training for lead {lead}", break_section=True)
+            logger.log_info("LeadTrainer", f"Starting training for lead {lead}")
             lead_cfg = copy(self.cfg)
-            self.cfg.model.lead = lead
-            self.cfg.output_dir = str(lead_output_dir)
+            lead_cfg.model.lead = lead
+            lead_cfg.output_dir = str(lead_output_dir)
 
             hf_trainer = HFTrainer(lead_cfg)
             hf_trainer.fit()

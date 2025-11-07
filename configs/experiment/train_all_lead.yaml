@@ -11,4 +11,4 @@ train:
   trainer: "lead_trainer"
   metrics: ["mse", "pred_dist"]
   epochs: 50
-  batch_size: 64
+  batch_size: 128
