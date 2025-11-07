@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from copy import copy
 
 from ..core.logger import logger
 
@@ -20,7 +21,7 @@ class LeadTrainer(TrainerProtocol):
             lead_output_dir.mkdir(parents=True, exist_ok=True)
 
             logger.log_info("LeadTrainer", f"Starting training for lead {lead}", break_section=True)
-            lead_cfg = self.cfg.clone()
+            lead_cfg = copy(self.cfg)
             self.cfg.model.lead = lead
             self.cfg.output_dir = str(lead_output_dir)
 
