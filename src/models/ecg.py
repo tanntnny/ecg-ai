@@ -6,7 +6,7 @@ import torch
 import torch.nn as nn
 from torch.nn import functional as F
 
-from ..core.logger import get_logger
+from ..core.logger import logger
 
 # ---------------- Constant ----------------
 _LEAD_ORDER = ['I', 'II', 'III', 'aVR', 'aVL', 'aVF', 'V1', 'V2', 'V3', 'V4', 'V5', 'V6']
@@ -164,7 +164,7 @@ class LeadModel(nn.Module):
     def __init__(self, cfg):
         super(LeadModel, self).__init__()
         self.cfg = cfg
-        self.logger = get_logger(self.cfg)
+        self.logger = logger
         self.lead = self.cfg.model.lead
         self.lead_encoder = CNNLeadEncoder(
             in_ch=1,
@@ -206,7 +206,7 @@ class ECGModel(nn.Module):
         
         self.cfg = cfg
         self.encoder = ECGEncoder(cfg)
-        self.logger = get_logger(self.cfg)
+        self.logger = logger
         
         if self.cfg.model.task == "age":
             self.head = AgeHead(cfg, input_dim=self.encoder.get_hidden_dim())
