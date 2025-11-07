@@ -8,7 +8,8 @@ def build_trainer(cfg) -> TrainerProtocol:
     trainer = cfg.train.trainer
     if trainer == "hf":
         return HFTrainer(cfg)
-    if trainer == "lead_encoder":
-        return LeadEncoderTrainer(cfg)
+    if trainer == "lead_trainer":
+        from .lead_trainer import LeadTrainer
+        return LeadTrainer(cfg)
     else:
         raise ValueError(f"Unknown trainer type: {trainer}")
