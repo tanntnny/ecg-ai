@@ -12,3 +12,5 @@ train:
   metrics: ["mse", "pred_dist"]
   epochs: 50
   batch_size: 128
+  metric_for_best_model: "eval_loss"
+  greater_is_better: false
