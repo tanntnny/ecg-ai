@@ -6,6 +6,7 @@ from copy import copy
 from ..core.logger import logger
 
 from .hf_trainer import HFTrainer
+from ..models.ecg import ECGModel, ECGEncoder, CNNLeadEncoder
 from ..interfaces.protocol import TrainerProtocol
 
 _LEAD_ORDER = ['I', 'II', 'III', 'aVR', 'aVL', 'aVF', 'V1', 'V2', 'V3', 'V4', 'V5', 'V6']
@@ -26,4 +27,18 @@ class LeadTrainer(TrainerProtocol):
             lead_cfg.output_dir = str(lead_output_dir)
 
             hf_trainer = HFTrainer(lead_cfg)
+            hf_trainer.fit()
+
+class ECGLeadFinetuner(TrainerProtocol):
+    def __init__(self, cfg):
+        self.cfg = cfg
+        self.output_dir = Path(self.cfg.output_dir)
+    
+    def fit(self):
+        logger.log_info("ECGLeadFinetuner", "Starting fine-tuning")
+        for lead in _LEAD_ORDER:
+            
+            lead_model = LeadTrainer()
+            logger.log_info("ECGLeadFinetuner", f"Starting fine-tuning")
+            hf_trainer = HFTrainer(self.cfg)
             hf_trainer.fit()

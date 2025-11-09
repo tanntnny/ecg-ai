@@ -268,7 +268,6 @@ class PreprocessECGPipeline(PipelineProtocol):
             csv_path = self.save_dir / f"data_config_lead_{lead}.csv"
             df.to_csv(csv_path, index=False)
         
-        # Create data config
         data_config = []
         for lead in _LEAD_ORDER:
             data_config.append({
