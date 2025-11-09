@@ -15,6 +15,7 @@ def build_model(cfg):
             hidden_dim=cfg.model.hidden_dim,
             conv_width=cfg.model.conv_width,
             dropout=cfg.model.dropout,
+            encoder=cfg.model.encoder,
             lead=getattr(cfg.model, "lead", None),
         )
         model = ECGModel(model_cfg)
