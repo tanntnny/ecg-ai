@@ -1,6 +1,6 @@
 from __future__ import annotations
 from transformers import AutoConfig, AutoModel
-from .ecg import ECGConfig, ECGModelHF
+from .ecg import ECGConfig, ECGModel
 
 def build_model(cfg):
     name = cfg.model.name
@@ -17,7 +17,7 @@ def build_model(cfg):
             dropout=cfg.model.dropout,
             lead=getattr(cfg.model, "lead", None),
         )
-        model = ECGModelHF(model_cfg)
+        model = ECGModel(model_cfg)
         return model
 
     else:

@@ -20,6 +20,7 @@ class ECGConfig(PretrainedConfig):
         conv_width: Optional[list[int]] = None,
         dropout: float = 0.1,
         lead: Optional[str] = None,
+        encoder: str = "cnn",
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -77,9 +78,40 @@ class CNNLeadEncoder(nn.Module):
         x = self.proj(x)
         return x
 
+class AttentionLeadEncoder(nn.Module):
+    def __init__(self, in_ch=1, hid_dim=512, num_heads=8, dropout=0.1):
+        super().__init__()
+        self.hid_dim = hid_dim
+        self.num_heads = num_heads
+        self.input_proj = nn.Sequential(
+            nn.Conv2d(in_ch, hid_dim, kernel_size=(3, 3), padding=(1, 1)),
+            nn.BatchNorm2d(hid_dim),
+            nn.ReLU(inplace=True)
+        )
+        self.attn = nn.MultiheadAttention(embed_dim=hid_dim, num_heads=num_heads, batch_first=True)
+        self.ffn = nn.Sequential(
+            nn.Linear(hid_dim, 4 * hid_dim),
+            nn.ReLU(inplace=True),
+            nn.LayerNorm(4 * hid_dim),
+            nn.Linear(4 * hid_dim, hid_dim),
+            nn.Dropout(dropout)
+        )
 
-# ---------------- HF Model ----------------
-class ECGModelHF(PreTrainedModel):
+        self.pool = nn.AdaptiveAvgPool1d(1)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        B, C, T, F = x.shape
+        x = self.input_proj(x)
+        x = x.mean(dim=-1)
+        x = x.transpose(1, 2)
+        attn_out, _ = self.attn(x, x, x)
+        x = attn_out + x
+        x = x + self.ffn(x)
+        x = x.transpose(1, 2)
+        x = self.pool(x).squeeze(-1)
+        return x
+
+class ECGModel(PreTrainedModel):
     config_class = ECGConfig
 
     def __init__(self, config: ECGConfig):
@@ -89,10 +121,18 @@ class ECGModelHF(PreTrainedModel):
         self.dropout = config.dropout
         self.lead = config.lead
 
-        self.encoder = nn.ModuleDict({
-            lead: CNNLeadEncoder(1, config.hidden_dim, config.conv_width, config.dropout)
-            for lead in _LEAD_ORDER
-        })
+        if config.encoder == "cnn":
+            self.encoder = nn.ModuleDict({
+                lead: CNNLeadEncoder(1, config.hidden_dim, config.conv_width, config.dropout)
+                for lead in _LEAD_ORDER
+            })
+        elif config.encoder == "attention":
+            self.encoder = nn.ModuleDict({
+                lead: AttentionLeadEncoder(in_ch=1, hid_dim=config.hidden_dim, num_heads=8, dropout=config.dropout)
+                for lead in _LEAD_ORDER
+            })
+        else:
+            raise ValueError(f"Unknown encoder: {config.encoder}")
 
         enc_dim = config.hidden_dim * len(_LEAD_ORDER)
 
