@@ -1,5 +1,7 @@
 name: "lead_model"
 
+encoder: "cnn"
+
 hidden_dim: 512
 conv_width: None
 dropout: 0.1
