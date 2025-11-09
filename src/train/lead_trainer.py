@@ -6,7 +6,7 @@ from copy import copy
 from ..core.logger import logger
 
 from .hf_trainer import HFTrainer
-from ..models.ecg import CNNLeadEncoder, ECGModelHF
+from ..models.ecg import CNNLeadEncoder, ECGModel
 from ..interfaces.protocol import TrainerProtocol
 
 _LEAD_ORDER = ['I', 'II', 'III', 'aVR', 'aVL', 'aVF', 'V1', 'V2', 'V3', 'V4', 'V5', 'V6']
