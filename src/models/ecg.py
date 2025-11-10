@@ -29,6 +29,7 @@ class ECGConfig(PretrainedConfig):
         self.conv_width = conv_width
         self.dropout = dropout
         self.lead = lead
+        self.encoder = encoder
 
 
 # ---------------- Submodules ----------------
