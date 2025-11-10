@@ -116,6 +116,9 @@ class HFTrainer(TrainerProtocol):
             warmup_steps=int(g("warmup_steps", 0)),
             lr_scheduler_type=g("lr_scheduler_type", "linear"),
 
+            # Training
+            save_safetensors=bool(g("save_safetensors", False)),
+
             # Precision / speed
             fp16=fp16,
             bf16=bf16,
