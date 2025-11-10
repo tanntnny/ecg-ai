@@ -1,5 +1,7 @@
 name: "ecg"
 
+encoder: "cnn"  # "cnn" | "transformer"
+
 hidden_dim: 512
 conv_width: None
 dropout: 0.1
