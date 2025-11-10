@@ -10,7 +10,7 @@ model:
 
 train:
   trainer: "hf"
-  metrics: ["accuracy", "pred_dist", "f1", "precision", "recall", "cm"]
+  metrics: ["accuracy", "pred_dist", "f1", "precision", "recall"]
   epochs: 50
   batch_size: 16
   metric_for_best_model: "eval_loss"
