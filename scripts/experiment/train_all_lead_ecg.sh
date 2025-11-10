@@ -17,5 +17,4 @@ source scripts/slurm/deepspeed.sh
 
 python -m src.main \
     cmd="train" \
-    experiment=train_all_lead_ecg
-     \
+    experiment=train_all_lead_ecg \

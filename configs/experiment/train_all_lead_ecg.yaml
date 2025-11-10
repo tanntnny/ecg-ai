@@ -5,7 +5,7 @@ defaults:
   - override /train: single_gpu_l
 
 model:
-  encoder: "attention"
+  encoder: "single_attention"
   task: "age"
 
 train:

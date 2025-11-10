@@ -4,32 +4,26 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from transformers import PreTrainedModel, PretrainedConfig
+from dataclasses import dataclass
+from transformers import PretrainedConfig
 
 # ---------------- Constants ----------------
 _LEAD_ORDER = ['I', 'II', 'III', 'aVR', 'aVL', 'aVF', 'V1', 'V2', 'V3', 'V4', 'V5', 'V6']
 
 
 # ---------------- Config ----------------
+@dataclass
 class ECGConfig(PretrainedConfig):
-    model_type = "ecg_model"
+    model_type: str = "ecg_model"
+    task: str = "age"
+    hidden_dim: int = 512
+    conv_width: Optional[list[int]] = None
+    dropout: float = 0.1
+    lead: Optional[str] = None
+    encoder: str = "cnn"
 
-    def __init__(
-        self,
-        task: str = "age",
-        hidden_dim: int = 512,
-        conv_width: Optional[list[int]] = None,
-        dropout: float = 0.1,
-        lead: Optional[str] = None,
-        encoder: str = "cnn",
-        **kwargs,
-    ):
-        super().__init__(**kwargs)
-        self.task = task
-        self.hidden_dim = hidden_dim
-        self.conv_width = conv_width
-        self.dropout = dropout
-        self.lead = lead
-        self.encoder = encoder
+    def __post_init__(self):
+        super().__init__()
 
 
 # ---------------- Submodules ----------------
@@ -117,7 +111,6 @@ class ECGModel(PreTrainedModel):
 
     def __init__(self, config: ECGConfig):
         super().__init__(config)
-        print(self.config)
         self.task = config.task
         self.hidden_dim = config.hidden_dim
         self.dropout = config.dropout
@@ -131,6 +124,12 @@ class ECGModel(PreTrainedModel):
         elif config.encoder == "attention":
             self.encoder = nn.ModuleDict({
                 lead: AttentionLeadEncoder(in_ch=1, hid_dim=config.hidden_dim, num_heads=8, dropout=config.dropout)
+                for lead in _LEAD_ORDER
+            })
+        elif config.encoder == "single_attention":
+            attn = AttentionLeadEncoder(in_ch=1, hid_dim=config.hidden_dim, num_heads=8, dropout=config.dropout)
+            self.encoder = nn.ModuleDict({
+                lead: attn
                 for lead in _LEAD_ORDER
             })
         else:
