@@ -81,7 +81,13 @@ class AttentionLeadEncoder(nn.Module):
         self.hid_dim = hid_dim
         self.num_heads = num_heads
         self.input_proj = nn.Sequential(
-            nn.Conv2d(in_ch, hid_dim, kernel_size=(3, 3), padding=(1, 1)),
+            nn.Conv2d(in_ch, hid_dim // 4, kernel_size=(3, 3), padding=(1, 1)),
+            nn.BatchNorm2d(hid_dim // 4),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(hid_dim // 4, hid_dim // 2, kernel_size=(3, 3), padding=(1, 1)),
+            nn.BatchNorm2d(hid_dim // 2),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(hid_dim // 2, hid_dim, kernel_size=(3, 3), padding=(1, 1)),
             nn.BatchNorm2d(hid_dim),
             nn.ReLU(inplace=True)
         )
