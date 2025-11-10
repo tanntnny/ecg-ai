@@ -116,6 +116,7 @@ class ECGModel(PreTrainedModel):
 
     def __init__(self, config: ECGConfig):
         super().__init__(config)
+        print(self.config)
         self.task = config.task
         self.hidden_dim = config.hidden_dim
         self.dropout = config.dropout

@@ -1,14 +1,15 @@
 # @package _global_
 
 defaults:
-  - override /model: lead_encoder_base
+  - override /model: ecg_base
   - override /train: single_gpu_l
 
 model:
+  encoder: "attention"
   task: "age"
 
 train:
-  trainer: "lead_trainer"
+  trainer: "hf"
   metrics: ["mse", "pred_dist"]
   epochs: 50
   batch_size: 128
