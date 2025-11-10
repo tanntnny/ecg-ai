@@ -7,6 +7,8 @@ from transformers import PreTrainedModel, PretrainedConfig
 from dataclasses import dataclass
 from transformers import PretrainedConfig
 
+from ..core.logger import logger
+
 # ---------------- Constants ----------------
 _LEAD_ORDER = ['I', 'II', 'III', 'aVR', 'aVL', 'aVF', 'V1', 'V2', 'V3', 'V4', 'V5', 'V6']
 
@@ -154,6 +156,8 @@ class ECGModel(PreTrainedModel):
         else:
             raise ValueError(f"Unknown task: {self.task}")
 
+        params = sum(p.numel() for p in self.parameters() if p.requires_grad)
+        logger.log_info("ECGModel", f"Initialized ECGModel with {params/1e6:.2f}M trainable parameters.")
         self.post_init()
 
     def forward(self, logmels: Dict[str, torch.Tensor], labels: Optional[torch.Tensor] = None, **kwargs):
