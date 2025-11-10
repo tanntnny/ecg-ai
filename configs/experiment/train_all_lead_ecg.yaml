@@ -6,7 +6,7 @@ defaults:
 
 model:
   encoder: "single_attention"
-  task: "age"
+  task: "sex"
 
 train:
   trainer: "hf"
