@@ -31,11 +31,13 @@ class ECGDataset(Dataset):
             lead, src = row["lead"], row["src"]
             for _, s in pd.read_csv(src).iterrows():
                 waveform, logmel, age, sex = s["waveform"], s["logmel"], s["age"], s["sex"]
+                cv_risk = s.get("cv_risk", None)
 
-                if pd.isna(waveform) or pd.isna(logmel) or pd.isna(age) or pd.isna(sex):
+                if pd.isna(waveform) or pd.isna(logmel) or pd.isna(age) or pd.isna(sex) or pd.isna(cv_risk):
                     continue
 
                 sex = _SEX_MAP[sex]
+                cv_risk = float(cv_risk)
                 logmel_tensor = torch.load(logmel) # [T, F]
                 # waveform_tensor, _ = torchaudio.load(waveform) # [T, ]
                 waveform_tensor = torch.zeros_like(logmel_tensor)
@@ -45,11 +47,11 @@ class ECGDataset(Dataset):
                     continue
                 
                 if basename not in group_by_name:
-                    group_by_name[basename] = [{}, {}, age, sex]
+                    group_by_name[basename] = [{}, {}, age, sex, cv_risk]
                 group_by_name[basename][0][lead] = logmel_tensor
                 group_by_name[basename][1][lead] = waveform_tensor
         
-        for name, [leads_logmel, leads_waveform, age, sex] in group_by_name.items():
+        for name, [leads_logmel, leads_waveform, age, sex, cv_risk] in group_by_name.items():
             if set(leads_logmel.keys()) != set(leads_waveform.keys()) != set(_LEAD_ORDER):
                 continue
             self.sample.append({
@@ -58,7 +60,10 @@ class ECGDataset(Dataset):
                 "age_label": torch.tensor(age, dtype=torch.long),
                 "sex_label": torch.tensor(sex, dtype=torch.long),
                 "label": torch.tensor(age if task == "age" else sex, dtype=torch.long),
-                "meta": {"basename": name}
+                "meta": {
+                    "basename": name,
+                    "cv_risk": torch.tensor(cv_risk, dtype=torch.float)
+                }
             })
 
     def __len__(self) -> int:

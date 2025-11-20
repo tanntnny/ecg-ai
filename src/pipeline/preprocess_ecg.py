@@ -50,6 +50,7 @@ class ECGData:
                     "age": row.get("age", None),
                     "sex": row.get("sex", None),
                     "name": row.get("name", None),
+                    "cv_risk": row.get("cv_risk", None),
                 }
                 point_meta.append(meta)
             except Exception:
@@ -218,6 +219,8 @@ class PreprocessECGPipeline(PipelineProtocol):
             age = meta_in.get("age", None)
             sex = meta_in.get("sex", None)
             name = meta_in.get("name", None)
+            cv_risk_val = meta_in.get("cv_risk", None)
+            cv_risk = float(cv_risk_val) if cv_risk_val is not None else None
 
             basename = (self.base_name or name or f"sample_{idx:04d}")
 
@@ -259,12 +262,13 @@ class PreprocessECGPipeline(PipelineProtocol):
                     "logmel": str(pt_path),
                     "age": age,
                     "sex": sex,
+                    "cv_risk": cv_risk,
                 })
 
         for lead, rows in self.lead_rows.items():
             if not rows:
                 continue
-            df = pd.DataFrame(rows, columns=["waveform", "logmel", "age", "sex"])
+            df = pd.DataFrame(rows, columns=["waveform", "logmel", "age", "sex", "cv_risk"])
             csv_path = self.save_dir / f"data_config_lead_{lead}.csv"
             df.to_csv(csv_path, index=False)
         
