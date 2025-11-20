@@ -61,4 +61,4 @@ export MASTER_PORT=${MASTER_PORT:-29500}
 export WORLD_SIZE=$(( SLURM_NNODES * SLURM_NTASKS_PER_NODE ))
 
 # ---------------- Launch ----------------
-python3 -m src.main cmd=pipeline ddp=False
+python3 -m src.main cmd=pipeline
