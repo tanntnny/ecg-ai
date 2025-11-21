@@ -6,12 +6,12 @@ defaults:
   - override /train: single_gpu_l
 
 model:
-  encoder: "single_attention"
-  task: "sex"
+  encoder: "cnn"
+  task: "age"
 
 train:
   trainer: "hf"
-  metrics: ["accuracy", "pred_dist", "f1", "precision", "recall"]
+  metrics: ["mae", "mse", "pred_dist"]
   epochs: 50
   batch_size: 16
   metric_for_best_model: "eval_loss"
