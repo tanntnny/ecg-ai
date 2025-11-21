@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#SBATCH --job-name=lead-train
+#SBATCH --job-name=train_sex_single_attention
 #SBATCH --partition=gpu
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
