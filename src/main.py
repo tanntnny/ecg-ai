@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import os
 import hydra
-from omegaconf import DictConfig
+from omegaconf import DictConfig, OmegaConf
 
 import warnings
 
@@ -29,6 +29,15 @@ def main(cfg: DictConfig) -> None:
         pipeline.run()
     else:
         raise SystemExit(f"Unknown cmd={cmd}")
+
+    save_user_config(cfg, cfg.output_dir)
+
+def save_user_config(cfg: DictConfig, save_dir: str) -> None:
+    save_path = os.path.join(save_dir, "user_configs.yaml")
+    os.makedirs(save_dir, exist_ok=True)
+    with open(save_path, "w", encoding="utf-8") as f:
+        f.write(OmegaConf.to_yaml(cfg))
+    print(f"Config saved to {save_path}")
 
 if __name__ == "__main__":
     main()

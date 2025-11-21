@@ -1,6 +1,6 @@
 pipeline: preprocess_ecg
 src: dataset/cleaned/data_config_with_cv_risk.csv
-save: dataset/preprocessed/ecg
+save: dataset/preprocessed/ecg_first_half
 
 target_fs: 1_00
 hp_cutoff_hz: 0.5
