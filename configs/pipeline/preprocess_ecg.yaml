@@ -1,5 +1,5 @@
 pipeline: preprocess_ecg
-src: dataset/cleaned/data_config_with_cv_risk.csv
+src: dataset/cleaned/data_config_first_half.csv
 save: dataset/preprocessed/ecg_first_half
 
 target_fs: 1_00
