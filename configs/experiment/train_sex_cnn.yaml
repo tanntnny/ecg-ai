@@ -1,7 +1,8 @@
 # @package _global_
 
 defaults:
-  - override /model: ecg_base
+  - override /data: ecg_first_half
+  - override /model: ecg
   - override /train: single_gpu_l
 
 model:
