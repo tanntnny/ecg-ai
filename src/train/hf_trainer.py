@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import json
 import os
+from numbers import Number
 from pathlib import Path
 from dataclasses import asdict, is_dataclass
 from typing import Any, Dict, Optional, List
@@ -39,6 +41,17 @@ class HFTrainer(TrainerProtocol):
         self.args = self._build_training_args()
         self.trainer: Optional[Trainer] = None
 
+        # Best-metric tracking (enabled only when metric_for_best_model is provided)
+        self.best_metric_name: Optional[str] = None
+        self.best_metric_key: Optional[str] = None
+        self.best_metric_value: Optional[float] = None
+        self.best_metric_step: Optional[int] = None
+        self.best_metrics_snapshot: Optional[Dict[str, Any]] = None
+        self.best_metrics_path = Path(self.cfg.output_dir) / "best_metrics.json"
+        self._missing_metric_warning_emitted = False
+
+        self._setup_best_metric_tracking()
+
     def fit(self) -> None:
         self.trainer = Trainer(
             model=self.model,
@@ -62,6 +75,7 @@ class HFTrainer(TrainerProtocol):
         if self.tokenizer is not None:
             self.tokenizer.save_pretrained(self.args.output_dir)
 
+        self._finalize_best_metrics()
         self.logger.log_info("HFTrainer", f"Training complete. Artifacts saved to: {self.args.output_dir}")
         self.logger.close()
 
@@ -155,6 +169,101 @@ class HFTrainer(TrainerProtocol):
         backend_note = "deepspeed" if deepspeed_config else ("fsdp" if fsdp_policy else ("ddp" if backend == "ddp" else "single/auto"))
         self.logger.log_info("HFTrainer", f"TrainingArguments ready (backend={backend_note}).")
         return args
+
+    def _setup_best_metric_tracking(self) -> None:
+        metric_name = getattr(self.args, "metric_for_best_model", None)
+        self.best_metric_name = metric_name
+        if not metric_name:
+            return
+
+        self.callbacks = [] if self.callbacks is None else list(self.callbacks)
+        self.callbacks.append(self._BestMetricCallback(self))
+        self.logger.log_info("HFTrainer", f"Tracking best metric: {metric_name}")
+
+    def _maybe_update_best_metrics(self, state, metrics: Dict[str, Any]) -> None:
+        if not self.best_metric_name:
+            return
+        metric_key = self.best_metric_name
+        metric_value = metrics.get(metric_key)
+        prefixed_key = f"eval_{metric_key}"
+        if metric_value is None and prefixed_key in metrics:
+            metric_value = metrics[prefixed_key]
+            metric_key = prefixed_key
+
+        if metric_value is None:
+            if not self._missing_metric_warning_emitted:
+                self.logger.log_info(
+                    "HFTrainer/BestMetric",
+                    f"Metric '{self.best_metric_name}' not present in evaluation metrics."
+                )
+                self._missing_metric_warning_emitted = True
+            return
+
+        metric_value = float(metric_value)
+        if self._is_better_metric(metric_value, metric_key):
+            self.best_metric_value = metric_value
+            self.best_metric_key = metric_key
+            self.best_metric_step = int(getattr(state, "global_step", 0))
+            self.best_metrics_snapshot = self._sanitize_metrics(metrics)
+
+            log_msg = (
+                f"New best {self.best_metric_name}={metric_value:.6f} "
+                f"at step {self.best_metric_step}"
+            )
+            self.logger.log_info("HFTrainer/BestMetric", log_msg)
+            if self.best_metric_step is not None:
+                self.logger.log_tb_scalar({f"best/{self.best_metric_name}": metric_value}, self.best_metric_step)
+
+    def _is_better_metric(self, candidate: float, metric_key: str) -> bool:
+        if self.best_metric_value is None:
+            return True
+        greater_is_better = self.args.greater_is_better
+        if greater_is_better is None:
+            greater_is_better = not metric_key.endswith("loss")
+        return candidate > self.best_metric_value if greater_is_better else candidate < self.best_metric_value
+
+    def _sanitize_metrics(self, metrics: Dict[str, Any]) -> Dict[str, Any]:
+        sanitized = {}
+        for key, value in metrics.items():
+            if isinstance(value, Number):
+                sanitized[key] = float(value)
+            else:
+                sanitized[key] = value
+        return sanitized
+
+    def _finalize_best_metrics(self) -> None:
+        if not self.best_metric_name or self.best_metric_value is None or not self.best_metrics_snapshot:
+            return
+
+        summary = {
+            "metric_for_best_model": self.best_metric_name,
+            "metric_key": self.best_metric_key,
+            "value": self.best_metric_value,
+            "step": self.best_metric_step,
+            "metrics": self.best_metrics_snapshot,
+        }
+
+        try:
+            self.best_metrics_path.parent.mkdir(parents=True, exist_ok=True)
+            self.best_metrics_path.write_text(json.dumps(summary, indent=2))
+            self.logger.log_info(
+                "HFTrainer/BestMetric",
+                f"Best metric summary saved to: {self.best_metrics_path}"
+            )
+        except Exception as exc:
+            self.logger.log_info(
+                "HFTrainer/BestMetric",
+                f"Failed to write best metric summary: {exc}"
+            )
+
+    class _BestMetricCallback(TrainerCallback):
+        def __init__(self, trainer: HFTrainer):
+            self.trainer = trainer
+
+        def on_evaluate(self, args, state, control, metrics=None, **kwargs):
+            if metrics is None:
+                return
+            self.trainer._maybe_update_best_metrics(state, metrics)
 
     @staticmethod
     def _to_plain_dict(obj: Any) -> Dict[str, Any]:
